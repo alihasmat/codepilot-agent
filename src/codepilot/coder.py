@@ -81,13 +81,47 @@ def _build_prompt(task: str, file_contents: dict[str, str]) -> str:
     return f"TASK:\n{task}\n\nCURRENT FILES:\n{files_section}"
 
 
-def _parse_proposal(raw: str) -> tuple[str, list[FileEdit]]:
-    # Strip accidental markdown fences before parsing.
-    cleaned = raw.strip()
+def _extract_json(text: str) -> str:
+    """Pull the first balanced {...} object out of a possibly-chatty reply.
+
+    Models sometimes wrap the JSON in prose or fences despite instructions.
+    Rather than fail, we find the outermost object by scanning braces.
+    """
+    cleaned = text.strip()
     if cleaned.startswith("```"):
-        cleaned = cleaned.split("```", 2)[1] if "```" in cleaned[3:] else cleaned
-        cleaned = cleaned.lstrip("json").strip("`").strip()
-    data = json.loads(cleaned)
+        # strip a ```json ... ``` fence
+        inner = cleaned.split("```", 2)
+        if len(inner) >= 2:
+            cleaned = inner[1]
+            if cleaned.lstrip().startswith("json"):
+                cleaned = cleaned.lstrip()[4:]
+    start = cleaned.find("{")
+    if start == -1:
+        return cleaned  # let json.loads raise a clear error
+    depth = 0
+    in_str = False
+    escape = False
+    for i in range(start, len(cleaned)):
+        c = cleaned[i]
+        if escape:
+            escape = False
+            continue
+        if c == "\\":
+            escape = True
+        elif c == '"':
+            in_str = not in_str
+        elif not in_str:
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    return cleaned[start : i + 1]
+    return cleaned[start:]  # unbalanced; json.loads will report the problem
+
+
+def _parse_proposal(raw: str) -> tuple[str, list[FileEdit]]:
+    data = json.loads(_extract_json(raw))
     reasoning = str(data.get("reasoning", "")).strip()
     edits = [
         FileEdit(path=e["path"], new_content=e["new_content"])
