@@ -29,5 +29,7 @@ Thumbs.db
 *.swo
 *.log
 
+.codepilot_cache/
+
 # Assignment documents
 assignment_01_coding_platform.md
