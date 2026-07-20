@@ -15,8 +15,8 @@ import difflib
 from dataclasses import dataclass
 from pathlib import Path
 
-from codepilot.coder import EditProposal
-from codepilot.guardrails import assert_path_allowed
+from codepilot.agents.coder import EditProposal
+from codepilot.agents.guardrails import assert_path_allowed
 
 WORKING_DIRNAME = "working"
 DIFF_FILENAME = "proposed_diff.txt"

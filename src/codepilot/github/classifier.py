@@ -12,9 +12,9 @@ from __future__ import annotations
 
 from langchain.chat_models import init_chat_model
 
-from codepilot.config import settings
-from codepilot.github_client import IssueSummary
-from codepilot.task import TaskType
+from codepilot.core.config import settings
+from codepilot.github.github_client import IssueSummary
+from codepilot.core.task import TaskType
 
 _CLASSIFY_PROMPT = """\
 You are triaging a software issue. Classify it into exactly ONE category:

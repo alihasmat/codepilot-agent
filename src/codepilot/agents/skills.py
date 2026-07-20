@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from codepilot.task import TaskType
+from codepilot.core.task import TaskType
 
 
 @dataclass(frozen=True)

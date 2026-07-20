@@ -13,9 +13,9 @@ from __future__ import annotations
 import sys
 import uuid
 
-from codepilot.config import settings
-from codepilot.orchestrator import build_orchestrator
-from codepilot.streaming import BOLD, DIM, RESET, render_stream
+from codepilot.core.config import settings
+from codepilot.orchestration.orchestrator import build_orchestrator
+from codepilot.core.streaming import BOLD, DIM, RESET, render_stream
 
 BANNER = f"""{BOLD}CodePilot Orchestrator — Phase 1 (planning only){RESET}
 {DIM}Type a coding task and watch it plan. Commands: /new (fresh session), /quit.{RESET}

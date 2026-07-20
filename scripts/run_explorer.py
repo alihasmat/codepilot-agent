@@ -14,10 +14,10 @@ from __future__ import annotations
 
 import sys
 
-from codepilot.config import settings
-from codepilot.repo_map import CACHE_PATH, build_repo_map
-from codepilot.retrieval import EmbeddingRetriever, KeywordRetriever
-from codepilot.workspace import WORKSPACE_ROOT, RepoWorkspace
+from codepilot.core.config import settings
+from codepilot.explorer.repo_map import CACHE_PATH, build_repo_map
+from codepilot.explorer.retrieval import EmbeddingRetriever, KeywordRetriever
+from codepilot.explorer.workspace import WORKSPACE_ROOT, RepoWorkspace
 
 BOLD = "\033[1m"
 DIM = "\033[2m"
@@ -42,7 +42,7 @@ def main() -> int:
     print(f"{DIM}Cloning/updating {workspace.repo_name} into {WORKSPACE_ROOT} ...{RESET}")
     repo_map = build_repo_map(workspace, settings.repo_map_token_budget, force=force)
 
-    from codepilot.tokens import count_tokens
+    from codepilot.core.tokens import count_tokens
     print(f"\n{BOLD}Repo Map{RESET} (sha {repo_map.sha[:8]}, "
           f"{len(repo_map.entries)} files, "
           f"{count_tokens(repo_map.rendered)} tokens, budget {settings.repo_map_token_budget}):")

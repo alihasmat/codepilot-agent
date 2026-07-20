@@ -26,12 +26,12 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Footer, Header, Label, ListItem, ListView, RichLog, Static
 
-from codepilot.config import settings
-from codepilot.github_client import GitHubClient, IssueSummary
-from codepilot.pipeline import run_pipeline
-from codepilot.repo_map import build_repo_map
-from codepilot.retrieval import KeywordRetriever
-from codepilot.workspace import RepoWorkspace
+from codepilot.core.config import settings
+from codepilot.github.github_client import GitHubClient, IssueSummary
+from codepilot.orchestration.pipeline import run_pipeline
+from codepilot.explorer.repo_map import build_repo_map
+from codepilot.explorer.retrieval import KeywordRetriever
+from codepilot.explorer.workspace import RepoWorkspace
 
 
 class ApprovalModal(ModalScreen[bool]):

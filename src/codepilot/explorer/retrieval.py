@@ -16,7 +16,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from codepilot.repo_map import FileEntry
+from codepilot.explorer.repo_map import FileEntry
 
 
 class KeywordRetriever:

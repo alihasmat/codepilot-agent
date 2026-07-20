@@ -8,8 +8,8 @@ Usage:
 
 from __future__ import annotations
 
-from codepilot.test_agent import run_tests
-from codepilot.workspace import RepoWorkspace
+from codepilot.agents.test_agent import run_tests
+from codepilot.explorer.workspace import RepoWorkspace
 
 
 def main() -> int:

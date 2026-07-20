@@ -16,7 +16,7 @@ from deepagents import create_deep_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph.state import CompiledStateGraph
 
-from codepilot.config import settings
+from codepilot.core.config import settings
 
 # The system prompt is the agent's job description. In Phase 1 we deliberately
 # steer it toward planning rather than doing, because it has no tools to act

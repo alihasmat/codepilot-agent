@@ -4,7 +4,7 @@ Usage:
     uv run python scripts/run_tui.py
 """
 
-from codepilot.tui import main
+from codepilot.ui.tui import main
 
 if __name__ == "__main__":
     raise SystemExit(main())

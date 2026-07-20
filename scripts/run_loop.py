@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import sys
 
-from codepilot.config import settings
-from codepilot.orchestrator_loop import Orchestrator
-from codepilot.streaming import BOLD, DIM, RESET, render_stream
+from codepilot.core.config import settings
+from codepilot.orchestration.orchestrator_loop import Orchestrator
+from codepilot.core.streaming import BOLD, DIM, RESET, render_stream
 
 BANNER = f"""{BOLD}CodePilot — Phase 2 (on-demand polling + triage){RESET}
 {DIM}Commands: poll | status | free | quit{RESET}

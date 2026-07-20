@@ -59,7 +59,7 @@ check("Imports (deepagents, github toolkit, chromadb, textual)", _imports)
 
 # 3. Environment --------------------------------------------------------------
 def _env():
-    from codepilot.config import settings
+    from codepilot.core.config import settings
 
     problems = settings.validate()
     assert not problems, "; ".join(problems)
@@ -73,7 +73,7 @@ check("Environment variables", _env)
 def _github():
     from github import Github
 
-    from codepilot.config import settings
+    from codepilot.core.config import settings
 
     gh = Github(settings.github_token)
     login = gh.get_user().login
@@ -89,7 +89,7 @@ check("GitHub auth and playground repo", _github)
 def _llm():
     from langchain.chat_models import init_chat_model
 
-    from codepilot.config import settings
+    from codepilot.core.config import settings
 
     model = init_chat_model(settings.model)
     reply = model.invoke("Reply with exactly one word: pong")
@@ -105,7 +105,7 @@ check("LLM responds", _llm)
 def _agent():
     from deepagents import create_deep_agent
 
-    from codepilot.config import settings
+    from codepilot.core.config import settings
 
     agent = create_deep_agent(
         model=settings.model,

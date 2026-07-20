@@ -14,14 +14,14 @@ from __future__ import annotations
 
 import sys
 
-from codepilot.classifier import classify_issue
-from codepilot.coder import propose_edits
-from codepilot.config import settings
-from codepilot.diffing import apply_edits, build_diff
-from codepilot.github_client import GitHubClient
-from codepilot.repo_map import build_repo_map
-from codepilot.retrieval import KeywordRetriever
-from codepilot.workspace import RepoWorkspace
+from codepilot.github.classifier import classify_issue
+from codepilot.agents.coder import propose_edits
+from codepilot.core.config import settings
+from codepilot.agents.diffing import apply_edits, build_diff
+from codepilot.github.github_client import GitHubClient
+from codepilot.explorer.repo_map import build_repo_map
+from codepilot.explorer.retrieval import KeywordRetriever
+from codepilot.explorer.workspace import RepoWorkspace
 
 BOLD = "\033[1m"; DIM = "\033[2m"; CYAN = "\033[36m"
 GREEN = "\033[32m"; YELLOW = "\033[33m"; RED = "\033[31m"; RESET = "\033[0m"

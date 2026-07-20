@@ -11,11 +11,11 @@ land, they slot in at these seams without changing the loop's shape.
 
 from __future__ import annotations
 
-from codepilot.classifier import classify_issue
-from codepilot.github_client import GitHubClient
-from codepilot.orchestrator import build_orchestrator
-from codepilot.streaming import BOLD, CYAN, DIM, GREEN, RESET, YELLOW, render_stream
-from codepilot.task import Task, TaskState
+from codepilot.github.classifier import classify_issue
+from codepilot.github.github_client import GitHubClient
+from codepilot.orchestration.orchestrator import build_orchestrator
+from codepilot.core.streaming import BOLD, CYAN, DIM, GREEN, RESET, YELLOW, render_stream
+from codepilot.core.task import Task, TaskState
 
 
 class Orchestrator:

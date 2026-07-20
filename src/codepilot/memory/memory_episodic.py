@@ -17,7 +17,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from codepilot.config import PROJECT_ROOT
+from codepilot.core.config import PROJECT_ROOT
 
 EPISODES_PATH = PROJECT_ROOT / ".codepilot_cache" / "episodes.json"
 

@@ -19,8 +19,8 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from codepilot.github_client import GitHubClient, IssueSummary
-from codepilot.task import TaskType
+from codepilot.github.github_client import GitHubClient, IssueSummary
+from codepilot.core.task import TaskType
 
 
 @dataclass
@@ -94,7 +94,23 @@ def open_pr_for_task(
             return PRResult(False, branch, None,
                             f"Could not create or switch to branch: {created.stderr.strip()}")
 
-    _git(["add", "-A", "--", ".", ":(exclude)working"], sandbox_root)
+    # Stage changes, but never compiled/cache artifacts. Running the test
+    # suite generates app/__pycache__/*.pyc and .pytest_cache; if those get
+    # committed they cause spurious merge conflicts (bytecode differs per run)
+    # and pollute the PR. We exclude them explicitly at stage time.
+    _git([
+        "add", "-A", "--",
+        ".",
+        ":(exclude)working",
+        ":(exclude)__pycache__",
+        ":(exclude)**/__pycache__",
+        ":(exclude)*.pyc",
+        ":(exclude)**/*.pyc",
+        ":(exclude).pytest_cache",
+        ":(exclude)**/.pytest_cache",
+        ":(exclude).chroma",
+        ":(exclude).codepilot_cache",
+    ], sandbox_root)
     msg = commit_message(issue, task_type, summary)
     committed = _git(["commit", "-m", msg], sandbox_root)
     if committed.returncode != 0 and "nothing to commit" in (committed.stdout + committed.stderr):

@@ -18,7 +18,7 @@ from pathlib import Path
 
 from langchain.chat_models import init_chat_model
 
-from codepilot.config import PROJECT_ROOT, settings
+from codepilot.core.config import PROJECT_ROOT, settings
 
 LESSONS_DIR = PROJECT_ROOT / ".codepilot_cache" / "lessons_chroma"
 

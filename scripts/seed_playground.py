@@ -15,7 +15,7 @@ import sys
 
 from github import Github, GithubException
 
-from codepilot.config import settings
+from codepilot.core.config import settings
 
 PLAYGROUND_NAME = settings.github_repo.split("/")[-1] if settings.github_repo else "codepilot-playground"
 
@@ -91,6 +91,7 @@ README_MD = (
 FILES = {
     "README.md": README_MD,
     "requirements.txt": REQUIREMENTS_TXT,
+    ".gitignore": "__pycache__/\n*.pyc\n.pytest_cache/\n",
     "app/__init__.py": "",
     "app/calculator.py": CALCULATOR_PY,
     "app/utils.py": UTILS_PY,

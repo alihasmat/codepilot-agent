@@ -16,22 +16,22 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from codepilot.classifier import classify_issue
-from codepilot.config import settings
-from codepilot.github_client import GitHubClient
-from codepilot.repo_map import build_repo_map
-from codepilot.retrieval import KeywordRetriever
-from codepilot.gates import (
+from codepilot.github.classifier import classify_issue
+from codepilot.core.config import settings
+from codepilot.github.github_client import GitHubClient
+from codepilot.explorer.repo_map import build_repo_map
+from codepilot.explorer.retrieval import KeywordRetriever
+from codepilot.github.gates import (
     gate_file_count, gate_pr_to_main, gate_push, prompt_approval,
 )
-from codepilot.memory_episodic import Episode, EpisodicMemory
-from codepilot.memory_semantic import SemanticMemory
-from codepilot.memory_working import WorkingMemory
-from codepilot.pr_agent import open_pr_for_task
-from codepilot.skills import select_skill
-from codepilot.task import Task
-from codepilot.verify_loop import implement_and_verify
-from codepilot.workspace import RepoWorkspace
+from codepilot.memory.memory_episodic import Episode, EpisodicMemory
+from codepilot.memory.memory_semantic import SemanticMemory
+from codepilot.memory.memory_working import WorkingMemory
+from codepilot.github.pr_agent import open_pr_for_task
+from codepilot.agents.skills import select_skill
+from codepilot.core.task import Task
+from codepilot.agents.verify_loop import implement_and_verify
+from codepilot.explorer.workspace import RepoWorkspace
 
 BOLD="\033[1m"; DIM="\033[2m"; CYAN="\033[36m"; GREEN="\033[32m"
 YELLOW="\033[33m"; RED="\033[31m"; RESET="\033[0m"

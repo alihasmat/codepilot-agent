@@ -17,10 +17,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from codepilot.coder import EditProposal, propose_edits
-from codepilot.config import settings
-from codepilot.diffing import apply_edits
-from codepilot.test_agent import TestResult, run_tests
+from codepilot.agents.coder import EditProposal, propose_edits
+from codepilot.core.config import settings
+from codepilot.agents.diffing import apply_edits
+from codepilot.agents.test_agent import TestResult, run_tests
 
 
 @dataclass

@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
-from codepilot.github_client import IssueSummary
+from codepilot.github.github_client import IssueSummary
 
 
 class TaskState(str, Enum):

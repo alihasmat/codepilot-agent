@@ -21,8 +21,8 @@ import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from codepilot.tokens import count_tokens
-from codepilot.workspace import RepoWorkspace
+from codepilot.core.tokens import count_tokens
+from codepilot.explorer.workspace import RepoWorkspace
 
 # Directories and files never worth mapping.
 _SKIP_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv", ".codepilot_cache", "dist", "build"}

@@ -19,8 +19,8 @@ from pathlib import Path
 
 from langchain.chat_models import init_chat_model
 
-from codepilot.config import settings
-from codepilot.guardrails import is_path_allowed
+from codepilot.core.config import settings
+from codepilot.agents.guardrails import is_path_allowed
 
 _CODER_SYSTEM = """\
 You are the Coder agent in an autonomous coding assistant. You fix issues \

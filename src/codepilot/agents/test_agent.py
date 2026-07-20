@@ -19,7 +19,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from codepilot.guardrails import assert_command_allowed
+from codepilot.agents.guardrails import assert_command_allowed
 
 # Run pytest through the SAME interpreter running CodePilot, not a bare
 # "python" that may resolve to a different environment where the project's

@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from github import Github
 from github.Issue import Issue
 
-from codepilot.config import settings
+from codepilot.core.config import settings
 
 
 @dataclass(frozen=True)

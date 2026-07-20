@@ -19,19 +19,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from codepilot.classifier import classify_issue
-from codepilot.gates import (
+from codepilot.github.classifier import classify_issue
+from codepilot.github.gates import (
     gate_file_count, gate_pr_to_main, gate_push,
 )
-from codepilot.github_client import GitHubClient, IssueSummary
-from codepilot.memory_episodic import Episode, EpisodicMemory
-from codepilot.memory_semantic import SemanticMemory
-from codepilot.pr_agent import open_pr_for_task
-from codepilot.repo_map import build_repo_map
-from codepilot.retrieval import KeywordRetriever
-from codepilot.skills import select_skill
-from codepilot.verify_loop import implement_and_verify
-from codepilot.workspace import RepoWorkspace
+from codepilot.github.github_client import GitHubClient, IssueSummary
+from codepilot.memory.memory_episodic import Episode, EpisodicMemory
+from codepilot.memory.memory_semantic import SemanticMemory
+from codepilot.github.pr_agent import open_pr_for_task
+from codepilot.explorer.repo_map import build_repo_map
+from codepilot.explorer.retrieval import KeywordRetriever
+from codepilot.agents.skills import select_skill
+from codepilot.agents.verify_loop import implement_and_verify
+from codepilot.explorer.workspace import RepoWorkspace
 
 LogFn = Callable[[str], None]
 ApproveFn = Callable[[str], bool]

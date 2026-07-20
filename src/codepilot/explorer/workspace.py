@@ -14,7 +14,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from codepilot.config import PROJECT_ROOT, settings
+from codepilot.core.config import PROJECT_ROOT, settings
 
 WORKSPACE_ROOT = PROJECT_ROOT / ".codepilot_cache" / "repo"
 
