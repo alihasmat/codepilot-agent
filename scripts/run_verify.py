@@ -21,7 +21,11 @@ from codepilot.config import settings
 from codepilot.github_client import GitHubClient
 from codepilot.repo_map import build_repo_map
 from codepilot.retrieval import KeywordRetriever
+from codepilot.memory_episodic import Episode, EpisodicMemory
+from codepilot.memory_semantic import SemanticMemory
+from codepilot.memory_working import WorkingMemory
 from codepilot.skills import select_skill
+from codepilot.task import Task
 from codepilot.verify_loop import implement_and_verify
 from codepilot.workspace import RepoWorkspace
 
@@ -68,12 +72,31 @@ def main() -> int:
     task_text = f"{issue.title}\n\n{issue.body}"
     target_paths = [p for p, _ in retriever.retrieve(task_text, k=5)]
 
+    # Memory: pull relevant lessons (semantic) and recent episodes (episodic).
+    semantic = SemanticMemory()
+    episodic = EpisodicMemory()
+    lessons = semantic.retrieve(task_text, k=3)
+    past = episodic.recall_for_files(target_paths, limit=3)
+
     print(f"\n{CYAN}Issue #{issue.number}{RESET} [{YELLOW}{task_type.value}{RESET}] {issue.title}")
     print(f"{DIM}Active skill: {skill.name}{RESET}")
     print(f"{DIM}Target files: {', '.join(target_paths)}{RESET}")
+    if lessons:
+        print(f"{DIM}Recalled {len(lessons)} lesson(s) from past work:{RESET}")
+        for l in lessons:
+            print(f"{DIM}  - {l}{RESET}")
+    if past:
+        print(f"{DIM}Past episodes on these files: "
+              f"{', '.join(f'#{e.issue_number}({e.outcome})' for e in past)}{RESET}")
     print(f"{DIM}Running fix-and-verify loop (max {settings.max_coder_retries} attempts)...{RESET}\n")
 
-    result = implement_and_verify(task_text, target_paths, workspace.path,
+    # Fold lessons into the task text so the Coder benefits from them.
+    task_with_memory = task_text
+    if lessons:
+        task_with_memory += "\n\nLessons from past work on this repo:\n" + \
+            "\n".join(f"- {l}" for l in lessons)
+
+    result = implement_and_verify(task_with_memory, target_paths, workspace.path,
                                   skill_block=skill.as_prompt_block())
 
     for a in result.attempts:
@@ -118,6 +141,29 @@ def main() -> int:
     answer = input(f"\n{BOLD}Approve this verified fix? [y/N]{RESET} ").strip().lower()
     if answer == "y":
         print(f"{GREEN}Approved. Ready for Phase 8 (branch, commit, PR).{RESET}")
+
+        # Memory writes happen at approval (Phase 7). In Phase 8 this trigger
+        # moves to actual PR merge; it's a one-line change.
+        summary = result.attempts[-1].reasoning if result.attempts else "change applied"
+        episodic.record(Episode(
+            issue_number=issue.number,
+            title=issue.title,
+            task_type=task_type.value,
+            files=[c for c in changed.splitlines() if c],
+            outcome="success",
+            summary=summary,
+        ))
+        print(f"{DIM}Episode recorded to episodic memory.{RESET}")
+
+        lesson = semantic.extract_and_store(
+            task_type=task_type.value,
+            title=issue.title,
+            summary=summary,
+            diff=git_diff,
+            issue_number=issue.number,
+        )
+        if lesson:
+            print(f"{DIM}Lesson learned: {lesson.text}{RESET}")
     else:
         _reset_sandbox(workspace)
         print(f"{YELLOW}Discarded and sandbox reset.{RESET}")
