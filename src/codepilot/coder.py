@@ -136,18 +136,23 @@ def propose_edits(
     target_paths: list[str],
     sandbox_root: Path,
     model: str | None = None,
+    skill_block: str | None = None,
 ) -> EditProposal:
     """Ask the Coder for edits, validate them against guardrails, return a proposal.
 
     No files are written. Guardrail-blocked edits are moved to `rejected`
-    with a reason and never shown as an applicable diff.
+    with a reason and never shown as an applicable diff. If a skill_block is
+    given (a rendered Skill playbook), it's prepended to the system prompt so
+    the Coder follows the task-type-specific rules.
     """
     file_contents = _read_files(sandbox_root, target_paths)
     prompt = _build_prompt(task, file_contents)
 
+    system = _CODER_SYSTEM if not skill_block else f"{skill_block}\n\n{_CODER_SYSTEM}"
+
     llm = init_chat_model(model or settings.model)
     reply = llm.invoke([
-        {"role": "system", "content": _CODER_SYSTEM},
+        {"role": "system", "content": system},
         {"role": "user", "content": prompt},
     ])
     raw = reply.text if isinstance(getattr(reply, "text", None), str) else str(reply.content)

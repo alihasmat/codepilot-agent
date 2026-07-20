@@ -21,6 +21,7 @@ from codepilot.config import settings
 from codepilot.github_client import GitHubClient
 from codepilot.repo_map import build_repo_map
 from codepilot.retrieval import KeywordRetriever
+from codepilot.skills import select_skill
 from codepilot.verify_loop import implement_and_verify
 from codepilot.workspace import RepoWorkspace
 
@@ -63,14 +64,17 @@ def main() -> int:
         return 1
 
     task_type = classify_issue(issue)
+    skill = select_skill(task_type)
     task_text = f"{issue.title}\n\n{issue.body}"
     target_paths = [p for p, _ in retriever.retrieve(task_text, k=5)]
 
     print(f"\n{CYAN}Issue #{issue.number}{RESET} [{YELLOW}{task_type.value}{RESET}] {issue.title}")
+    print(f"{DIM}Active skill: {skill.name}{RESET}")
     print(f"{DIM}Target files: {', '.join(target_paths)}{RESET}")
     print(f"{DIM}Running fix-and-verify loop (max {settings.max_coder_retries} attempts)...{RESET}\n")
 
-    result = implement_and_verify(task_text, target_paths, workspace.path)
+    result = implement_and_verify(task_text, target_paths, workspace.path,
+                                  skill_block=skill.as_prompt_block())
 
     for a in result.attempts:
         status = f"{GREEN}PASS{RESET}" if a.test_passed else f"{RED}FAIL{RESET}"

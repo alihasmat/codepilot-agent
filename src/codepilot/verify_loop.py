@@ -38,6 +38,7 @@ class LoopResult:
     attempts: list[AttemptRecord] = field(default_factory=list)
     final_proposal: EditProposal | None = None
     final_tests: TestResult | None = None
+    baseline_failures: frozenset[str] = frozenset()
 
 
 def implement_and_verify(
@@ -45,14 +46,28 @@ def implement_and_verify(
     target_paths: list[str],
     sandbox_root: Path,
     max_retries: int | None = None,
+    skill_block: str | None = None,
 ) -> LoopResult:
-    """Run the propose -> apply -> test loop until tests pass or retries run out."""
+    """Run the propose -> apply -> test loop until the task introduces no new
+    failures, or retries run out.
+
+    A task is judged on the tests IT affects, not the whole suite in absolute
+    terms. We record which tests already fail on the pristine checkout (the
+    baseline); a task succeeds when it introduces no *new* failures beyond
+    that baseline. This prevents an unrelated pre-existing bug (e.g. a
+    still-open bug in another file) from failing, say, a documentation task.
+    """
     max_retries = max_retries if max_retries is not None else settings.max_coder_retries
     result = LoopResult(success=False)
     accumulated_task = task_text
 
+    # Baseline: what's already broken before we touch anything.
+    baseline = run_tests(sandbox_root)
+    result.baseline_failures = baseline.failed_names
+
     for attempt in range(1, max_retries + 1):
-        proposal = propose_edits(accumulated_task, target_paths, sandbox_root)
+        proposal = propose_edits(accumulated_task, target_paths, sandbox_root,
+                                 skill_block=skill_block)
         result.final_proposal = proposal
 
         if not proposal.edits:
@@ -69,24 +84,44 @@ def implement_and_verify(
         tests = run_tests(sandbox_root)
         result.final_tests = tests
 
+        # New failures = tests failing now that were NOT failing at baseline.
+        new_failures = tests.failed_names - baseline.failed_names
+        # A task passes if it introduced no new failures AND the suite could
+        # actually run (no collection error, tests present).
+        task_ok = (not new_failures) and (tests.errors == 0) and (tests.total > 0)
+
+        failure_desc = ""
+        if not task_ok:
+            if new_failures:
+                failure_desc = (
+                    f"Introduced {len(new_failures)} new failure(s): "
+                    f"{sorted(new_failures)}"
+                )
+            elif tests.total == 0:
+                failure_desc = "No tests could be collected."
+            else:
+                failure_desc = tests.failure_summary
+
         result.attempts.append(AttemptRecord(
             attempt=attempt,
             reasoning=proposal.reasoning,
             files_changed=written,
-            test_passed=tests.ok,
-            failure_summary=tests.failure_summary,
+            test_passed=task_ok,
+            failure_summary=failure_desc,
         ))
 
-        if tests.ok:
+        if task_ok:
             result.success = True
             break
 
-        # Feed the failure back into the task for the next attempt.
+        # Feed only the NEW failures back; the Coder shouldn't chase
+        # pre-existing bugs outside its task.
         accumulated_task = (
             f"{task_text}\n\n"
-            f"Your previous attempt did not pass the tests. Test output:\n"
-            f"{tests.failure_summary}\n\n"
-            f"Fix the code so all tests pass."
+            f"Your change introduced these NEW test failures (pre-existing "
+            f"failures are not your concern):\n{sorted(new_failures)}\n\n"
+            f"Full output:\n{tests.failure_summary}\n\n"
+            f"Fix your change so it introduces no new failures."
         )
 
     return result

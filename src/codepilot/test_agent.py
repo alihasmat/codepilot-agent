@@ -40,6 +40,7 @@ class TestResult:
     ok: bool
     raw_output: str
     failure_summary: str  # the FAILED ... lines, for feeding back to the Coder
+    failed_names: frozenset[str] = frozenset()  # e.g. {"tests/test_x.py::test_y"}
 
     @property
     def total(self) -> int:
@@ -81,6 +82,16 @@ def _failure_lines(output: str) -> str:
     if detail:
         combined += "\n\nDetail:\n" + "\n".join(detail[:40])
     return combined.strip()
+
+
+def _failed_test_names(output: str) -> frozenset[str]:
+    """Extract failing test node ids like 'tests/test_x.py::test_y'."""
+    names = set()
+    for line in output.splitlines():
+        m = re.match(r"(?:FAILED|ERROR)\s+(\S+::\S+)", line.strip())
+        if m:
+            names.add(m.group(1))
+    return frozenset(names)
 
 
 def run_tests(sandbox_root: Path) -> TestResult:
@@ -135,4 +146,5 @@ def run_tests(sandbox_root: Path) -> TestResult:
         ok=ok,
         raw_output=output,
         failure_summary=failure_summary,
+        failed_names=_failed_test_names(output),
     )
