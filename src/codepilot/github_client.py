@@ -93,3 +93,29 @@ class GitHubClient:
 
     def get_issue(self, number: int) -> IssueSummary:
         return IssueSummary.from_issue(self._repo.get_issue(number))
+
+    @property
+    def default_branch(self) -> str:
+        return self._repo.default_branch
+
+    def open_pull_request(
+        self,
+        *,
+        head_branch: str,
+        base_branch: str | None = None,
+        title: str,
+        body: str,
+        labels: list[str] | None = None,
+    ) -> str:
+        """Open a PR from head_branch into base_branch. Returns the PR URL.
+
+        The branch must already exist on the remote (we push it via git in
+        the sandbox). This only creates the PR object and applies labels.
+        """
+        base = base_branch or self.default_branch
+        pr = self._repo.create_pull(
+            title=title, body=body, head=head_branch, base=base
+        )
+        if labels:
+            pr.add_to_labels(*labels)
+        return pr.html_url

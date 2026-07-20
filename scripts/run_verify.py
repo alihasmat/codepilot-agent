@@ -21,9 +21,13 @@ from codepilot.config import settings
 from codepilot.github_client import GitHubClient
 from codepilot.repo_map import build_repo_map
 from codepilot.retrieval import KeywordRetriever
+from codepilot.gates import (
+    gate_file_count, gate_pr_to_main, gate_push, prompt_approval,
+)
 from codepilot.memory_episodic import Episode, EpisodicMemory
 from codepilot.memory_semantic import SemanticMemory
 from codepilot.memory_working import WorkingMemory
+from codepilot.pr_agent import open_pr_for_task
 from codepilot.skills import select_skill
 from codepilot.task import Task
 from codepilot.verify_loop import implement_and_verify
@@ -139,35 +143,62 @@ def main() -> int:
         print(f"{DIM}(no textual changes){RESET}")
 
     answer = input(f"\n{BOLD}Approve this verified fix? [y/N]{RESET} ").strip().lower()
-    if answer == "y":
-        print(f"{GREEN}Approved. Ready for Phase 8 (branch, commit, PR).{RESET}")
-
-        # Memory writes happen at approval (Phase 7). In Phase 8 this trigger
-        # moves to actual PR merge; it's a one-line change.
-        summary = result.attempts[-1].reasoning if result.attempts else "change applied"
-        episodic.record(Episode(
-            issue_number=issue.number,
-            title=issue.title,
-            task_type=task_type.value,
-            files=[c for c in changed.splitlines() if c],
-            outcome="success",
-            summary=summary,
-        ))
-        print(f"{DIM}Episode recorded to episodic memory.{RESET}")
-
-        lesson = semantic.extract_and_store(
-            task_type=task_type.value,
-            title=issue.title,
-            summary=summary,
-            diff=git_diff,
-            issue_number=issue.number,
-        )
-        if lesson:
-            print(f"{DIM}Lesson learned: {lesson.text}{RESET}")
-    else:
+    if answer != "y":
         _reset_sandbox(workspace)
         print(f"{YELLOW}Discarded and sandbox reset.{RESET}")
+        return 0
+
+    # ---- Human-in-the-loop gates before touching the remote ----
+    base = gh.default_branch
+    tests_line = (
+        f"{result.final_tests.passed} passed, {result.final_tests.failed} failed "
+        f"(pre-existing), verified by CodePilot's Test Agent."
+        if result.final_tests else "Verified by CodePilot's Test Agent."
+    )
+
+    file_gate = gate_file_count(n_files)
+    push_gate = gate_push()
+    main_gate = gate_pr_to_main(base, base)  # base==default here, so this fires
+
+    for gate in (file_gate, push_gate, main_gate):
+        if gate.required and not prompt_approval(gate):
+            print(f"{YELLOW}Gate not approved: {gate.reason}. Stopping before remote.{RESET}")
+            _reset_sandbox(workspace)
+            return 0
+
+    # ---- Record memory (Phase 7) ----
+    summary = result.attempts[-1].reasoning if result.attempts else "change applied"
+    changed_files = [c for c in changed.splitlines() if c]
+    episodic.record(Episode(
+        issue_number=issue.number, title=issue.title, task_type=task_type.value,
+        files=changed_files, outcome="success", summary=summary,
+    ))
+    lesson = semantic.extract_and_store(
+        task_type=task_type.value, title=issue.title, summary=summary,
+        diff=git_diff, issue_number=issue.number,
+    )
+    if lesson:
+        print(f"{DIM}Lesson learned: {lesson.text}{RESET}")
+
+    # ---- Open the PR ----
+    print(f"{DIM}Creating branch, committing, pushing, opening PR...{RESET}")
+    pr = open_pr_for_task(
+        issue=issue, task_type=task_type, summary=summary, tests_line=tests_line,
+        sandbox_root=workspace.path, github=gh, base_branch=base,
+    )
+    if pr.success:
+        print(f"{GREEN}PR opened: {pr.pr_url}{RESET}")
+        print(f"{DIM}Branch: {pr.branch}{RESET}")
+    else:
+        print(f"{RED}PR not opened: {pr.message}{RESET}")
+    # Return sandbox to a clean state for the next run.
+    _git_checkout_main(workspace, base)
     return 0
+
+
+def _git_checkout_main(workspace: RepoWorkspace, base: str) -> None:
+    subprocess.run(["git", "checkout", base], cwd=workspace.path,
+                   capture_output=True, text=True)
 
 
 if __name__ == "__main__":
