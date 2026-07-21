@@ -117,6 +117,8 @@ This was built as a focused project, and a few tradeoffs are worth being honest 
 
 **GitHub toolkit substitution.** The brief specified LangChain's `GitHubToolkit`. Its API wrapper hard-requires GitHub App authentication (an app ID and private key) with no personal-access-token path, and registering an App purely to read issues was disproportionate. CodePilot wraps PyGithub directly (which the toolkit itself uses underneath) and exposes the same operations. Everything GitHub-related goes through one client, so swapping in the literal toolkit would touch only that file.
 
+**Python and pytest only.** CodePilot assumes the target repository is a Python project with a `pytest` test suite. The coder, test agent, and verification loop all depend on this. Repositories in other languages, or Python projects without tests, will not work: with no tests to run, the verification step correctly refuses to confirm any change, so every task fails. Pointing it at a real repository works only if that repository fits these assumptions, and since it writes code and opens pull requests autonomously, it is best aimed at low-stakes repositories on clearly-scoped issues (a bug with a failing test is the ideal case).
+
 **Tests run in CodePilot's environment.** The test agent runs the target repo's tests using CodePilot's own Python environment, so pytest and any test dependencies must be installed there. A production version would provision the target repo's dependencies in an isolated environment first.
 
 **Episodic memory appends duplicates.** Working the same issue twice records two episodes. Semantic lessons overwrite (keyed by issue number), but the episodic log would benefit from deduplication in a longer-running system.
